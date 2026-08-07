@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 
 from ollama import Client
 from langchain_ollama import ChatOllama
-import html
 import os
 import uvicorn
 import time
@@ -171,11 +170,11 @@ async def submit_text(user_text: str = Form("")):
         </div>
         """
         return render_page(body)
-    except Exception as e:
+    except Exception:
         body = f"""
         <div class="container">
             <h2 style="color:red;">Error Occurred</h2>
-            <p>{html.escape(str(e))}</p>
+            <p>An unexpected error occurred while processing your request. Please try again.</p>
             <br>
             <a href="/chatbot" class="back-button">Go back</a>
         </div>
