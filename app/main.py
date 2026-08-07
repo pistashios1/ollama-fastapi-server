@@ -11,7 +11,7 @@ import time
 import markdown
 import re
 
-import pyfunc # Static functions for retrieval
+import app.ragfunc as ragfunc # Static functions for retrieval
 
 
 app = FastAPI()
@@ -34,23 +34,7 @@ def chat_with_ollama(prompt: str, context: str = ""):
     # Generate a response from the chat model based on the prompt
     response = chat_model.invoke(prompt)
 
-    completion_tokens = 0
-    response_metadata = getattr(response, "response_metadata", None) or {}
-    token_usage = response_metadata.get("token_usage", {}) if isinstance(response_metadata, dict) else {}
-
-    if isinstance(token_usage, dict):
-        completion_tokens = (
-            token_usage.get("completion_tokens")
-            or token_usage.get("completion")
-            or token_usage.get("output_tokens")
-            or token_usage.get("generated_tokens")
-            or 0
-        )
-
-    if not completion_tokens and isinstance(response_metadata, dict):
-        completion_tokens = response_metadata.get("eval_count", 0)
-
-    return response, completion_tokens
+    return response
 
 
 def call_ollama(prompt: str):
@@ -135,14 +119,14 @@ async def submit_text(user_text: str = Form(...)):
 			</div>
 			"""
 			return render_page(body, status_code=400)
+		
 
 		start = time.perf_counter()
-		model = (None, 0)
 		if is_test_RAG:
 			with open("static/sample_text.txt", "r") as f:
 				sample_text = f.read()
-			chunks = pyfunc.chunk_text(sample_text)
-			relevant_chunks = pyfunc.retrieve_relevant_chunks(user_text, chunks)
+			chunks = ragfunc.chunk_text(sample_text)
+			relevant_chunks = ragfunc.retrieve_relevant_chunks(user_text, chunks)
 			context = "\n\n".join([chunk for chunk, score in relevant_chunks[:3]])
 			model_result = chat_with_ollama(f"Context:\n{context}\n\nQuestion:\n{user_text}")
 			raw_response = getattr(model_result, "content", "") or ""
@@ -173,7 +157,7 @@ async def submit_text(user_text: str = Form(...)):
 			<h2>Model Thinking:</h2>
 			<p>{rendered_thinking}</p>
 			<h2>Token Usage:</h2>
-			<p>Completion Tokens: {model[1]}</p>
+			<p>Completion Tokens: {model[1] if not is_test_RAG else "RAG test mode is enabled. Token count unavailable..."}</p>
 			<p>Time Taken: {time.perf_counter() - start:.2f} seconds</p>
 			<a href="/chatbot" class="back-button">Go back</a>
 		</div>
