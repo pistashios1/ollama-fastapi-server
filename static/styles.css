@@ -24,8 +24,8 @@ body {
 	text-align: left;
 }
 
-.home-link a:hover {
-	color: #d6eaff;
+.home-link:hover {
+	color:#63aaf6
 }
 
 .response-container {
@@ -60,7 +60,9 @@ textarea {
 	border-radius: 5px;
 }
 
-.submit-button :hover {
+.start-button:hover,
+.back-button:hover,
+.submit-button:hover {
 	background-color: #0056b3;
 }
 

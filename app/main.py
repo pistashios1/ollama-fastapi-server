@@ -10,7 +10,6 @@ import os
 import uvicorn
 import time
 import markdown
-import re
 
 import ragfunc # Static functions for retrieval
 
@@ -106,12 +105,12 @@ async def submit_text(user_text: str = Form(...)):
 		raw_response = getattr(model_result, "content", "") or ""
 
 		rendered_response = markdown.markdown(raw_response or "")
-		rendered_thinking = markdown.markdown("RAG test mode is enabled. No thinking output is available...")
+		rendered_thinking = markdown.markdown("N/A. RAG test mode is enabled.")
 
 
 		body = f"""
 		<div class="response-container">
-			<h2>Model Response:</h2>
+			<h2 style="text-align:center;">Model Response</h2>
 			<div class="response-box">
 				<p>{rendered_response}</p>
 			</div>
