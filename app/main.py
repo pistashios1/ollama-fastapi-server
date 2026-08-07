@@ -4,15 +4,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 
 from ollama import Client
-from langchain_ollama import OllamaEmbeddings, ChatOllama
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_ollama import ChatOllama
 import html
 import uvicorn
 import time
 import markdown
 import re
 
-#import "rag-test"
+import pyfunc # Static functions for retrieval
 
 
 app = FastAPI()
@@ -25,51 +24,11 @@ is_thinking = True
 is_test_RAG = True
 
 
-def cosine_similarity(a, b):
-    dot_product = sum([x * y for x, y in zip(a, b)])
-    norm_a = sum([x ** 2 for x in a]) ** 0.5
-    norm_b = sum([y ** 2 for y in b]) ** 0.5
-    return dot_product / (norm_a * norm_b)
-
-
-def chunk_text(text: str, chunk_size: int = 1500, chunk_overlap: int = 300):
-	# Create an instance of the RecursiveCharacterTextSplitter class
-	text_splitter = RecursiveCharacterTextSplitter(
-		chunk_size=chunk_size,
-		chunk_overlap=chunk_overlap,
-	)
-
-	# Split the input text into chunks
-	text_chunks = text_splitter.split_text(text)
-
-	return text_chunks
-
-def retrieve_relevant_chunks(query: str, text_chunks: list[str]):
-    # Create an instance of the OllamaEmbeddings class
-    embeddings = OllamaEmbeddings(
-        model="mxbai-embed-large",
-        base_url="http://127.0.0.1:11434/",
-        
-    )
-    query_embedding = embeddings.embed_query(query)
-
-    # Calculate similarity scores between the query embedding and text chunk embeddings
-    similarity_scores = []
-    for chunk in text_chunks:
-        chunk_embedding = embeddings.embed_documents([chunk])[0]
-        similarity_score = cosine_similarity(query_embedding, chunk_embedding)
-        similarity_scores.append((chunk, similarity_score))
-
-    # Sort the chunks based on similarity scores in descending order
-    sorted_chunks = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
-
-    return sorted_chunks
 
 def chat_with_ollama(prompt: str, context: str = ""):
     # Create an instance of the ChatOllama class
     chat_model = ChatOllama(
-        model=CHAT_MODEL,
-        base_url="http://127.0.0.1:11434/",
+        model=CHAT_MODEL
     )
 
     # Generate a response from the chat model based on the prompt
@@ -182,8 +141,8 @@ async def submit_text(user_text: str = Form(...)):
 		if is_test_RAG:
 			with open("static/sample_text.txt", "r") as f:
 				sample_text = f.read()
-			chunks = chunk_text(sample_text)
-			relevant_chunks = retrieve_relevant_chunks(user_text, chunks)
+			chunks = pyfunc.chunk_text(sample_text)
+			relevant_chunks = pyfunc.retrieve_relevant_chunks(user_text, chunks)
 			context = "\n\n".join([chunk for chunk, score in relevant_chunks[:3]])
 			model_result = chat_with_ollama(f"Context:\n{context}\n\nQuestion:\n{user_text}")
 			raw_response = getattr(model_result, "content", "") or ""
