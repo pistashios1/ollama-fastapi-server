@@ -4,15 +4,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 
 from ollama import Client
-from langchain_ollama import ChatOllama
 import html
 import uvicorn
 import time
 import markdown
-import re
-
-import app.ragfunc as ragfunc # Static functions for retrieval
-
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -20,31 +15,28 @@ test_client = TestClient(app)
 
 client = Client()
 CHAT_MODEL = "gemma4:cloud" #"qwen3.5:4b"
-is_test_RAG = True
+is_thinking = True
 
 
-
-def chat_with_ollama(prompt: str):
-    # Create an instance of the ChatOllama class
-    chat_model = ChatOllama(
-        model=CHAT_MODEL
-    )
-
-    # Generate a response from the chat model based on the prompt
-    response = chat_model.invoke(prompt)
-
-    return response
-
-
-def extract_thinking_and_response(text: str):
-	if not text:
-		return "", ""
-
-	think_matches = re.findall(r"<think>(.*?)</think>", text, flags=re.DOTALL | re.IGNORECASE)
-	model_thinking = "\n\n".join([m.strip() for m in think_matches if m and m.strip()])
-	clean_response = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE).strip()
-
-	return clean_response, model_thinking
+def call_ollama(prompt: str):
+	response = client.chat(
+        model = CHAT_MODEL,
+		messages=[
+			{
+				"role": "system",
+				"content": (
+					"You are a helpful assistant. Try to answer the user's question as best as you can..."
+					"Try to be as concise as the user, or as wordy as the user..."
+					"Try to answer within 60 seconds or less..."
+					"Be conservative with your token usage."
+			),
+			},
+			{"role": "user", "content": prompt}
+		],
+		think=is_thinking,
+		#format='json'
+	)
+	return response, response.get("eval_count", 0)
 
 
 def render_page(body: str, status_code: int = 200):
@@ -101,17 +93,16 @@ async def submit_text(user_text: str = Form(...)):
 
 		start = time.perf_counter()
 
-		with open("static/sample_text.txt", "r") as f:
-			sample_text = f.read()
-		chunks = ragfunc.chunk_text(sample_text)
-		relevant_chunks = ragfunc.retrieve_relevant_chunks(user_text, chunks)
-		context = "\n\n".join([chunk for chunk, score in relevant_chunks[:3]])
-		model_result = chat_with_ollama(f"Context:\n{context}\n\nQuestion:\n{user_text}")
-		raw_response = getattr(model_result, "content", "") or ""
-		model_response, model_thinking = extract_thinking_and_response(raw_response)
+		model = call_ollama(user_text)
+
+		model_response = getattr(model[0].message, "content", "")
+		if is_thinking:
+			model_thinking = getattr(model[0].message, "thinking", "") or ""
+		else:
+			model_thinking = ""
 
 		rendered_response = markdown.markdown(model_response or "")
-		rendered_thinking = markdown.markdown(model_thinking or "RAG test mode is enabled. No thinking output is available...")
+		rendered_thinking = markdown.markdown(model_thinking or "")
 
 
 		body = f"""
@@ -122,7 +113,9 @@ async def submit_text(user_text: str = Form(...)):
 			</div>
 			<h2>Model Thinking:</h2>
 			<p>{rendered_thinking}</p>
-			<h2>Time Taken: {time.perf_counter() - start:.2f} seconds</h2>
+			<h2>Token Usage:</h2>
+			<p>Completion Tokens: {model[1]}</p>
+			<p>Time Taken: {time.perf_counter() - start:.2f} seconds</p>
 			<a href="/chatbot" class="back-button">Go back</a>
 		</div>
 		"""
