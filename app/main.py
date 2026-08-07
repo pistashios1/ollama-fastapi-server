@@ -22,7 +22,6 @@ test_client = TestClient(app)
 client = Client()
 CHAT_MODEL = "gemma4:cloud" #"qwen3.5:4b"
 FILE_PATH = "static/cat-facts.txt"
-is_test_RAG = True
 
 
 
@@ -34,6 +33,8 @@ def chat_with_ollama(prompt: str, context: str = ""):
 
     # Generate a response from the chat model based on the prompt
     response = chat_model.invoke(f"Context:\n{context}\n\nQuestion:\n{prompt}")
+
+    print(response)
 
     return response
 
@@ -111,6 +112,7 @@ async def submit_text(user_text: str = Form(...)):
 		chunks = ragfunc.chunk_text(sample_text)
 		relevant_chunks = ragfunc.retrieve_relevant_chunks(user_text, chunks)
 		context = "\n\n".join([chunk for chunk, score in relevant_chunks[:3]])
+		print(f"Context for RAG:\n{context}\n\n")
 		model_result = chat_with_ollama(user_text, context=context)
 		raw_response = getattr(model_result, "content", "") or ""
 		model_response, model_thinking = extract_thinking_and_response(raw_response)
@@ -127,7 +129,9 @@ async def submit_text(user_text: str = Form(...)):
 			</div>
 			<h2>Model Thinking:</h2>
 			<p>{rendered_thinking}</p>
-			<h2>Time Taken: <span>{time.perf_counter() - start:.2f}</span> seconds</h2>
+			<h2>Model Usage:</h2>
+			<p>Total Tokens: {(getattr(model_result, "usage_metadata", {}) or {}).get("total_tokens", "N/A")}</p>
+			<p>Time Taken: {time.perf_counter() - start:.2f} seconds</p>
 			<a href="/chatbot" class="back-button">Go back</a>
 		</div>
 		"""

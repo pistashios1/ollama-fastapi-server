@@ -10,7 +10,7 @@ def cosine_similarity(a, b):
     return dot_product / (norm_a * norm_b)
 
 
-def chunk_text(text: str, chunk_size: int = 1500, chunk_overlap: int = 300):
+def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 300):
 	# Create an instance of the RecursiveCharacterTextSplitter class
 	text_splitter = RecursiveCharacterTextSplitter(
 		chunk_size=chunk_size,
