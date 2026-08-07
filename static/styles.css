@@ -6,6 +6,7 @@ body {
 }
 
 .response-container,
+.form-container,
 .container {
 	max-width: 600px;
 	margin: 0 auto;
@@ -16,8 +17,19 @@ body {
 	text-align: center;
 }
 
+.home-link {
+	display: block;
+	margin-bottom: 20px;
+	color: #007bff;
+	text-align: left;
+}
+
+.home-link a:hover {
+	color: #d6eaff;
+}
+
 .response-container {
-	max-width: 500px;
+	max-width: 600px;
 	border-color: black;
 	text-align: left;
 	border-width: 1px;

@@ -6,12 +6,13 @@ from fastapi.testclient import TestClient
 from ollama import Client
 from langchain_ollama import ChatOllama
 import html
+import os
 import uvicorn
 import time
 import markdown
 import re
 
-import app.ragfunc as ragfunc # Static functions for retrieval
+import ragfunc # Static functions for retrieval
 
 
 app = FastAPI()
@@ -20,18 +21,19 @@ test_client = TestClient(app)
 
 client = Client()
 CHAT_MODEL = "gemma4:cloud" #"qwen3.5:4b"
+FILE_PATH = "static/cat-facts.txt"
 is_test_RAG = True
 
 
 
-def chat_with_ollama(prompt: str):
+def chat_with_ollama(prompt: str, context: str = ""):
     # Create an instance of the ChatOllama class
     chat_model = ChatOllama(
         model=CHAT_MODEL
     )
 
     # Generate a response from the chat model based on the prompt
-    response = chat_model.invoke(prompt)
+    response = chat_model.invoke(f"Context:\n{context}\n\nQuestion:\n{prompt}")
 
     return response
 
@@ -72,13 +74,16 @@ async def home_page():
 @app.get("/chatbot", response_class=HTMLResponse)
 async def get_form():
 	body = f"""
-	<div class="container">
+	<div class="form-container">
 		<h2>Welcome to your personal AI chatbot!</h2>
+		<p>Currently indexed file: <strong>{os.path.basename(FILE_PATH)}</strong></p>
 		<form action="/submit-text" method="post">
 			<textarea id="user_text" name="user_text" rows="4" cols="50" required placeholder="Enter text here..."></textarea>
 			<br><br>
 			<button class="submit-button" type="submit">Submit Text</button>
 		</form>
+		<br>
+		<a href="/" class="home-link">&lt;Home</a>
 	</div>
 	"""
 	return render_page(body)
@@ -101,12 +106,12 @@ async def submit_text(user_text: str = Form(...)):
 
 		start = time.perf_counter()
 
-		with open("static/sample_text.txt", "r") as f:
+		with open(FILE_PATH, "r") as f:
 			sample_text = f.read()
 		chunks = ragfunc.chunk_text(sample_text)
 		relevant_chunks = ragfunc.retrieve_relevant_chunks(user_text, chunks)
 		context = "\n\n".join([chunk for chunk, score in relevant_chunks[:3]])
-		model_result = chat_with_ollama(f"Context:\n{context}\n\nQuestion:\n{user_text}")
+		model_result = chat_with_ollama(user_text, context=context)
 		raw_response = getattr(model_result, "content", "") or ""
 		model_response, model_thinking = extract_thinking_and_response(raw_response)
 
@@ -122,7 +127,7 @@ async def submit_text(user_text: str = Form(...)):
 			</div>
 			<h2>Model Thinking:</h2>
 			<p>{rendered_thinking}</p>
-			<h2>Time Taken: {time.perf_counter() - start:.2f} seconds</h2>
+			<h2>Time Taken: <span>{time.perf_counter() - start:.2f}</span> seconds</h2>
 			<a href="/chatbot" class="back-button">Go back</a>
 		</div>
 		"""
@@ -167,4 +172,4 @@ def test_submit_text_validation_rejects_whitespace_input():
 
 if __name__ == "__main__":
 	print("Hello!")
-	uvicorn.run(app, host="127.0.0.1", port=8000)
+	uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
