@@ -21,7 +21,7 @@ test_client = TestClient(app)
 
 client = Client()
 CHAT_MODEL = "gemma4:cloud" #"qwen3.5:4b"
-FILE_PATH = "static/cat-facts.txt"
+FILE_PATH = "static/cat-facts-organized.txt"
 
 
 
@@ -37,17 +37,6 @@ def chat_with_ollama(prompt: str, context: str = ""):
     print(response)
 
     return response
-
-
-def extract_thinking_and_response(text: str):
-	if not text:
-		return "", ""
-
-	think_matches = re.findall(r"<think>(.*?)</think>", text, flags=re.DOTALL | re.IGNORECASE)
-	model_thinking = "\n\n".join([m.strip() for m in think_matches if m and m.strip()])
-	clean_response = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE).strip()
-
-	return clean_response, model_thinking
 
 
 def render_page(body: str, status_code: int = 200):
@@ -115,10 +104,9 @@ async def submit_text(user_text: str = Form(...)):
 		print(f"Context for RAG:\n{context}\n\n")
 		model_result = chat_with_ollama(user_text, context=context)
 		raw_response = getattr(model_result, "content", "") or ""
-		model_response, model_thinking = extract_thinking_and_response(raw_response)
 
-		rendered_response = markdown.markdown(model_response or "")
-		rendered_thinking = markdown.markdown(model_thinking or "RAG test mode is enabled. No thinking output is available...")
+		rendered_response = markdown.markdown(raw_response or "")
+		rendered_thinking = markdown.markdown("RAG test mode is enabled. No thinking output is available...")
 
 
 		body = f"""
@@ -127,12 +115,17 @@ async def submit_text(user_text: str = Form(...)):
 			<div class="response-box">
 				<p>{rendered_response}</p>
 			</div>
+		</div>	
+		<br>
+		<div class="response-container">
 			<h2>Model Thinking:</h2>
 			<p>{rendered_thinking}</p>
 			<h2>Model Usage:</h2>
 			<p>Total Tokens: {(getattr(model_result, "usage_metadata", {}) or {}).get("total_tokens", "N/A")}</p>
 			<p>Time Taken: {time.perf_counter() - start:.2f} seconds</p>
+			<br>
 			<a href="/chatbot" class="back-button">Go back</a>
+			<br>
 		</div>
 		"""
 		return render_page(body)

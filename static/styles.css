@@ -9,7 +9,7 @@ body {
 .form-container,
 .container {
 	max-width: 600px;
-	margin: 0 auto;
+	margin: auto;
 	background-color: rgb(255, 255, 255);
 	padding: 20px;
 	box-shadow: 0 0 10px #146e4c53;
