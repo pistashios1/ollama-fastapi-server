@@ -1,11 +1,4 @@
 *.pyc
 app/__pycache__/
 .venv/
-.venv/Lib
 *.egg-info
-.venv/Lib/site-packages/annotated_doc-0.0.4.dist-info/entry_points.txt
-.venv/Lib/site-packages/annotated_doc-0.0.4.dist-info/INSTALLER
-.venv/Lib/site-packages/annotated_doc-0.0.4.dist-info/METADATA
-.venv/Lib/site-packages/annotated_doc-0.0.4.dist-info/RECORD
-.venv/Lib/site-packages/annotated_doc-0.0.4.dist-info/WHEEL
-.venv/Lib/site-packages/annotated_doc-0.0.4.dist-info/licenses/LICENSE
