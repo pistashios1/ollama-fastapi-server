@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,43 +15,39 @@ import markdown
 import ragfunc # Static functions for retrieval
 
 
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-test_client = TestClient(app)
 
 client = Client()
 CHAT_MODEL = "gemma4:cloud" #"qwen3.5:4b"
 FILE_PATH = "static/cat-facts-organized.txt"
 _chat_model: ChatOllama | None = None
 SAMPLE_TEXT: str = ""
-SAMPLE_CHUNKS: list[tuple[str, float]] | None = None
+SAMPLE_CHUNKS: list[str] | None = None
 MODEL_INVOKE_TIMEOUT = 30.0
 MAX_USER_INPUT_LENGTH = 5000
 
 
-def _load_and_chunk_sample_text():
-    try:
-        with open(FILE_PATH, "r", encoding="utf-8") as f:
-            text = f.read()
-    except FileNotFoundError:
-        text = ""
-    chunks = ragfunc.chunk_text(text) if text else []
-    return text, chunks
-
-
-@app.on_event("startup")
-async def _startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global _chat_model, SAMPLE_TEXT, SAMPLE_CHUNKS
-    _chat_model = ChatOllama(model=CHAT_MODEL)
-    SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(_load_and_chunk_sample_text)
+    _chat_model = await asyncio.to_thread(ChatOllama, model=CHAT_MODEL)
+    SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(ragfunc._load_and_chunk_sample_text)
+    yield
+    # Clean up model on shutdown
+    if _chat_model is not None:
+        # call close() if the ChatOllama instance exposes it, else just drop reference
+        await asyncio.to_thread(getattr(_chat_model, "close", lambda: None))
+        _chat_model = None
 
-
+app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+test_client = TestClient(app)
 
 async def chat_with_ollama(prompt: str, context: str = ""):
     global _chat_model
+    _sys_prompt = "You are a helpful assistant. Be as helpful as you can, and answer the question based on the context provided. Do not ignore this instruction. If the context does not contain the answer, say 'I don't know.'"
     if _chat_model is None:
         _chat_model = await asyncio.to_thread(ChatOllama, model=CHAT_MODEL)
-    return await asyncio.to_thread(_chat_model.invoke, f"Context:\n{context}\n\nQuestion:\n{prompt}")
+    return await asyncio.to_thread(_chat_model.invoke, f"System:{_sys_prompt}\nContext:\n{context}\n\nQuestion:\n{prompt}")
 
 
 def render_page(body: str, status_code: int = 200):
@@ -122,12 +119,12 @@ async def submit_text(user_text: str = Form("")):
         start = time.perf_counter()
 
         if SAMPLE_CHUNKS is None:
-            SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(_load_and_chunk_sample_text)
+            SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(ragfunc._load_and_chunk_sample_text)
         chunks = SAMPLE_CHUNKS or await asyncio.to_thread(ragfunc.chunk_text, SAMPLE_TEXT)
 
         relevant_chunks = await asyncio.to_thread(ragfunc.retrieve_relevant_chunks, user_text, chunks)
         context = "\n\n".join([chunk for chunk, score in (relevant_chunks or [])[:3]])
-        print(f"Context for RAG:\n{context}\n\n")
+        print(f"--------Context for RAG:--------\n{context}\n\n")
 
         try:
             model_result = await asyncio.wait_for(
