@@ -1,7 +1,7 @@
 *.pyc
 app/__pycache__/
 .venv/
-*.egg-info
+fastapi_test_app.egg-info
 requirements.txt
 uv.lock
 .env
