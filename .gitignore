@@ -2,6 +2,3 @@
 app/__pycache__/
 .venv/
 fastapi_test_app.egg-info
-requirements.txt
-uv.lock
-.env
