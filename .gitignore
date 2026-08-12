@@ -2,3 +2,6 @@
 app/__pycache__/
 .venv/
 *.egg-info
+requirements.txt
+uv.lock
+.env

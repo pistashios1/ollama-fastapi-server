@@ -10,6 +10,7 @@ from langchain_ollama import ChatOllama
 import os
 import uvicorn
 import time
+import traceback
 import markdown
 
 import ragfunc # Static functions for retrieval
@@ -25,12 +26,20 @@ SAMPLE_CHUNKS: list[str] | None = None
 MODEL_INVOKE_TIMEOUT = 30.0
 MAX_USER_INPUT_LENGTH = 5000
 
+def _load_and_chunk_sample_text():
+    try:
+        with open(FILE_PATH, "r", encoding="utf-8") as f:
+            text = f.read()
+    except FileNotFoundError:
+        text = ""
+    chunks = ragfunc.chunk_text(text) if text else []
+    return text, chunks
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _chat_model, SAMPLE_TEXT, SAMPLE_CHUNKS
     _chat_model = await asyncio.to_thread(ChatOllama, model=CHAT_MODEL)
-    SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(ragfunc._load_and_chunk_sample_text)
+    SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(_load_and_chunk_sample_text)
     yield
     # Clean up model on shutdown
     if _chat_model is not None:
@@ -119,7 +128,7 @@ async def submit_text(user_text: str = Form("")):
         start = time.perf_counter()
 
         if SAMPLE_CHUNKS is None:
-            SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(ragfunc._load_and_chunk_sample_text)
+            SAMPLE_TEXT, SAMPLE_CHUNKS = await asyncio.to_thread(_load_and_chunk_sample_text)
         chunks = SAMPLE_CHUNKS or await asyncio.to_thread(ragfunc.chunk_text, SAMPLE_TEXT)
 
         relevant_chunks = await asyncio.to_thread(ragfunc.retrieve_relevant_chunks, user_text, chunks)
@@ -167,7 +176,21 @@ async def submit_text(user_text: str = Form("")):
         </div>
         """
         return render_page(body)
-    except Exception:
+    except ConnectionError:
+        print("ConnectionError: Failed to connect to the Ollama server. Please ensure the server is running and accessible.")
+        body = f"""
+        <div class="container">
+            <h2 style="color:red;">Connection Error</h2>
+            <p>Failed to connect to the Ollama server. Contact administrator.</p>
+            <br>
+            <a href="/chatbot" class="back-button">Go back</a>
+        </div>
+        """
+        return render_page(body, status_code=503)
+    except Exception as e:
+        # Print full traceback and exception details to the terminal for debugging
+        traceback.print_exc()
+        print(f"Exception repr: {e!r}")
         body = f"""
         <div class="container">
             <h2 style="color:red;">Error Occurred</h2>
