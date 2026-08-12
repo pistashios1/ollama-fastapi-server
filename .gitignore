@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-sort.py
-=======
 *.pyc
 app/__pycache__/
 .venv/
 *.egg-info
->>>>>>> copilot/performance-improvement-app-main-py
