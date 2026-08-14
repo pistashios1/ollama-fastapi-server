@@ -27,18 +27,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Configure environment variables (optional)
+2. Run the server locally with Uvicorn
 
 ```bash
-export OLLAMA_URL="http://localhost:11434"
-export OLLAMA_API_KEY="your_api_key_if_needed"
+uvicorn main:app --host 127.0.0.0 --port 8000 --reload
 ```
-
-3. Run the server locally with Uvicorn
-
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
+(This implementation supports running web server directly inside the Python script. Check `main.py`)
 
 If your app entrypoint file is named differently (for example `app.py` or `server.py`) adjust the `uvicorn` command accordingly.
 
