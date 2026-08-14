@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 
-from ollama import Client
 from langchain_ollama import ChatOllama
 import os
 import uvicorn
@@ -17,7 +16,6 @@ import ragfunc # Static functions for retrieval
 
 
 
-client = Client()
 CHAT_MODEL = "gemma4:cloud" #"qwen3.5:4b"
 FILE_PATH = "static/cat-facts-organized.txt"
 _chat_model: ChatOllama | None = None
