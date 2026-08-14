@@ -89,6 +89,3 @@ black .
 Contributing
 - Open an issue or PR with a clear description of the change.
 - Follow the repository's coding, testing, and commit message conventions.
-
-License
-Specify a license in a LICENSE file (e.g., MIT) or add one now if you plan to publish this project.
