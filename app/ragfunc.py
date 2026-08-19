@@ -56,6 +56,7 @@ def recursive_chunks(documents: list[Document], chunk_size: int = 800, chunk_ove
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         separators=["\n\n", "\n", ". ", " ", ""],
+        add_start_index=True,
     )
     return splitter.split_documents(documents)
 

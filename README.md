@@ -34,6 +34,16 @@ uvicorn main:app --host 127.0.0.0 --port 8000 --reload
 ```
 (This implementation supports running web server directly inside the Python script. Check `main.py`)
 
+For the streaming LangGraph RAG chat interface, run this new entrypoint from the
+repository root instead:
+
+```bash
+uvicorn app.streaming_main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Open `http://127.0.0.1:8000`. The interface streams each answer as it is
+generated and displays the retrieved document pages.
+
 If your app entrypoint file is named differently (for example `app.py` or `server.py`) adjust the `uvicorn` command accordingly.
 
 API (example)
