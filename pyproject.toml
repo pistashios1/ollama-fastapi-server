@@ -13,6 +13,7 @@ dependencies = [
   "langchain-chroma>=0.2.6",
   "langchain-classic>=1.0.0",
   "langchain-ollama>=1.0.0",
+  "langgraph>=1.0.0",
   "langchain-text-splitters>=1.0.0",
   "markdown>=3.0.0",
   "pypdf>=5.0.0",
