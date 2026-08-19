@@ -1,27 +1,27 @@
 # ollama-fastapi-server
 
-Lightweight FastAPI wrapper for Ollama LLM agents.
+## Lightweight FastAPI wrapper for Ollama.
 
-This repository provides a small FastAPI server that exposes HTTP endpoints to interact with local or remote Ollama agents. It is intended as a simple, deployable API layer so you can build apps and integrations on top of Ollama models using familiar REST patterns.
+This repository provides a small FastAPI server that exposes HTTP endpoints to interact with the Ollama API. It is intended as a simple, deployable API layer so you can build apps and integrations on top of Ollama models using familiar REST patterns.
 
-Features
+### Features
 
-- FastAPI app exposing endpoints to list and call Ollama agents (see `/agents`).
+- FastAPI app exposing an endpoint to show a chatbot interface
 - Simple configuration for connecting to Ollama (local or remote instance).
 - Example request/response patterns for quick integration.
 
-Requirements
+### Requirements
 
 - Python 3.10+ (3.11 recommended)
 - pip
-- An Ollama instance reachable from this server (local or remote)
+- An Ollama instance reachable from the server (local or remote)
 
-Environment variables
+### Environment variables
 
 - OLLAMA_URL: base URL where the Ollama service is reachable. Defaults to `http://localhost:11434`.
 - OLLAMA_API_KEY: (optional) API key/token if your Ollama instance requires authentication.
 
-Quickstart
+## Quickstart
 
 1. Create a virtual environment and install dependencies
 
@@ -39,56 +39,17 @@ uvicorn main:app --host 127.0.0.0 --port 8000 --reload
 
 (This implementation supports running web server directly inside the Python script. Check `main.py`)
 
-For the streaming LangGraph RAG chat interface, run this new entrypoint from the
-repository root instead:
-
-```bash
-uvicorn app.streaming_main:app --host 127.0.0.1 --port 8000 --reload
-```
-
 Open `http://127.0.0.1:8000`. The interface streams each answer as it is
 generated and displays the retrieved document pages.
 
 If your app entrypoint file is named differently (for example `app.py` or `server.py`) adjust the `uvicorn` command accordingly.
 
-API (example)
-
-- GET /agents
-  - Returns a list of available agents (models) known to the configured Ollama instance.
-
-- POST /agents/{agent}/invoke
-  - Sends an input payload to the named agent and returns its response.
-  - Example request body (JSON):
-
-```json
-{
-  "input": "Say hello in one sentence",
-  "params": { "temperature": 0.2 }
-}
-```
-
-Example curl
-
-List agents:
-
-```bash
-curl -s "http://localhost:8000/agents"
-```
-
-Invoke an agent:
-
-```bash
-curl -s -X POST "http://localhost:8000/agents/my-agent/invoke" \
-  -H "Content-Type: application/json" \
-  -d '{"input":"Hello from curl"}'
-```
-
-Notes
+## Notes
 
 - This README describes expected endpoints and usage at a high level; please check the actual implementation files (for example `main.py`, `app.py`, or the `routes/` directory) for exact route paths and request/response formats.
 - If your Ollama instance uses a different base path or authentication scheme, update the code/config accordingly.
 
-Development
+### Development
 
 - Run unit tests (if present) with pytest:
 
@@ -104,7 +65,7 @@ ruff check .
 black .
 ```
 
-Contributing
+## Contributing
 
 - Open an issue or PR with a clear description of the change.
 - Follow the repository's coding, testing, and commit message conventions.
