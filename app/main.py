@@ -1,7 +1,7 @@
 """Streaming LangGraph RAG chatbot server.
 
 Run from the repository root with:
-    uvicorn app.streaming_main:app --reload
+    uvicorn app.main:app --reload
 """
 
 from __future__ import annotations
@@ -225,5 +225,5 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
 if __name__ == "__main__":
     import uvicorn
 
-    app_target = "app.streaming_main:app" if __package__ else "streaming_main:app"
+    app_target = "app.main:app" if __package__ else "main:app"
     uvicorn.run(app_target, host="127.0.0.1", port=8000, reload=True)
