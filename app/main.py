@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 
 if __package__:
     from .ragfunc import chunk_documents, load_document
-else:  # Supports `python app/streaming_main.py` as well as the documented Uvicorn command.
+else:
     from ragfunc import chunk_documents, load_document
 
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gemma4:cloud")
