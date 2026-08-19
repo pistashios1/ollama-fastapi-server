@@ -28,7 +28,7 @@ Quickstart
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install fastapi uvicorn markdown langchain[standard] langchain-ollama langchain-chroma langgraph pydantic python-dotenv pypdf
+pip install "fastapi[standard]" markdown "langchain[standard]" langchain-ollama langchain-chroma langgraph
 ```
 
 2. Run the server locally with Uvicorn
