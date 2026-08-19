@@ -1,12 +1,12 @@
 # ollama-fastapi-server
 
-## Lightweight FastAPI wrapper for Ollama.
+## Lightweight FastAPI wrapper for Ollama
 
 This repository provides a small FastAPI server that exposes HTTP endpoints to interact with the Ollama API. It is intended as a simple, deployable API layer so you can build apps and integrations on top of Ollama models using familiar REST patterns.
 
 ### Features
 
-- FastAPI app exposing an endpoint to show a chatbot interface
+- FastAPI app exposing an endpoint to show a chatbot interface.
 - Simple configuration for connecting to Ollama (local or remote instance).
 - Example request/response patterns for quick integration.
 
