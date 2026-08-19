@@ -26,7 +26,24 @@
   <script>
     const chat = document.querySelector('#chat'), form = document.querySelector('#composer'), input = document.querySelector('#message'), send = document.querySelector('#send'), notice = document.querySelector('#notice'); const history = [];
     const streamUrl = __STREAM_URL__;
-    function add(text, role) { const el = document.createElement('article'); el.className = 'message ' + role; el.textContent = text; chat.append(el); chat.scrollTop = chat.scrollHeight; return el } function addSources(items) { if (!items.length) return; const el = document.createElement('div'); el.className = 'sources'; el.textContent = 'Retrieved: '; items.forEach(s => { const tag = document.createElement('span'); tag.textContent = `${s.source}, line ${s.line}`; el.append(tag) }); chat.append(el) }
+    function add(text, role) {
+        const el = document.createElement('article');
+        el.className = 'message ' + role;
+        el.textContent = text; chat.append(el);
+        chat.scrollTop = chat.scrollHeight;
+        return el
+    }
+    function addSources(items) {
+      if (!items.length)
+        return;
+      const el = document.createElement('div');
+      el.className = 'sources';
+      el.textContent = 'Retrieved: ';
+      items.forEach(s => { const tag = document.createElement('span');
+      tag.textContent = `${s.source}, line ${s.line}`;
+      el.append(tag) });
+      chat.append(el)
+    }
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const message = input.value.trim();

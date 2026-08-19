@@ -47,7 +47,12 @@ def fixed_size_chunks(documents: list[Document], chunk_size: int = 800, chunk_ov
         for offset in range(0, len(document.page_content), step):
             text = document.page_content[offset : offset + chunk_size]
             if text.strip():
-                result.append(Document(page_content=text, metadata={**document.metadata, "offset": offset}))
+                result.append(
+                    Document(
+                        page_content=text,
+                        metadata={**document.metadata, "offset": offset, "start_index": offset},
+                    )
+                )
     return result
 
 
@@ -72,6 +77,8 @@ def semantic_chunks(documents: list[Document], embeddings: OllamaEmbeddings, sim
             continue
         vectors = embeddings.embed_documents(sentences)
         current = [sentences[0]]
+        current_start = document.page_content.find(sentences[0])
+        sentence_start = current_start
         for sentence, prior, current_vector in zip(sentences[1:], vectors, vectors[1:]):
             dot = sum(left * right for left, right in zip(prior, current_vector))
             prior_norm = sum(value * value for value in prior) ** 0.5
@@ -80,9 +87,21 @@ def semantic_chunks(documents: list[Document], embeddings: OllamaEmbeddings, sim
             if similarity >= similarity_threshold:
                 current.append(sentence)
             else:
-                result.append(Document(page_content=" ".join(current), metadata=document.metadata.copy()))
+                result.append(
+                    Document(
+                        page_content=" ".join(current),
+                        metadata={**document.metadata, "start_index": current_start},
+                    )
+                )
                 current = [sentence]
-        result.append(Document(page_content=" ".join(current), metadata=document.metadata.copy()))
+                current_start = sentence_start
+            sentence_start = document.page_content.find(sentence, sentence_start + len(sentence))
+        result.append(
+            Document(
+                page_content=" ".join(current),
+                metadata={**document.metadata, "start_index": current_start},
+            )
+        )
     return result
 
 
