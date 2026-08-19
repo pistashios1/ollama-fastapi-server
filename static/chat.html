@@ -6,20 +6,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>RAG Assistant</title>
   <link rel="stylesheet" href="static/style.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 
 <body>
   <main class="shell">
     <header class="head">
-      <h1>RAG Assistant</h1>
-      <p>Ask questions grounded in your indexed document.</p>
+      <h1>Cat Facts Assistant</h1>
+      <p>Ask questions about your favorite animal companion!</p>
     </header>
     <section id="chat" class="chat" aria-live="polite">
-      <p class="meta">Ready. Responses stream as they are generated.</p>
+      <p class="meta">Ready.</p>
     </section>
     <p id="notice" class="notice" role="alert"></p>
     <form id="composer" class="composer" action="#" onsubmit="return false"><textarea id="message"
-        placeholder="Ask about the document…" required maxlength="5000" aria-label="Question"></textarea><button
+        placeholder="Ask the chatbot here…" required maxlength="5000" aria-label="Question"></textarea><button
         id="send" type="submit">Send</button></form>
   </main>
   <script>
